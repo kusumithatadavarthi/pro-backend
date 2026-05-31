@@ -2,12 +2,15 @@ const bcrypt=require('bcrypt');
 const jwt=require('jsonwebtoken');
 const user=require('../model/auth.model');
 const{registration_schema,login_schema}=require('../validation/auth.validator')
-const login =async(req,res)=>{
+const login =async(req,res,next)=>{
     try{
     const data=req.body
+    if(!req.body || Object.keys(req.body).length === 0) {
+  return res.status(400).json({ message: "request body is empty" })
+}
       const rest = login_schema.safeParse(req.body);
     if(!rest.success) {
-  return res.status(400).json({ message: rest.error.errors[0].message })
+  return res.status(400).json({ message: rest.error.issues[0].message })
 }
  
     
@@ -25,17 +28,20 @@ const user_data = await user.findOne({email: data.email}).select('+password')
     res.send(token);
 }
 catch(err) {
-  res.status(500).json({ message: "something went wrong" })
+  next(err);
 }
 }
 
-const register=async(req,res)=>{
+const register=async(req,res,next)=>{
     try{
 
     const data=req.body
+    if(!req.body || Object.keys(req.body).length === 0) {
+  return res.status(400).json({ message: "request body is empty" })
+}
     const rest = registration_schema.safeParse(req.body);
     if(!rest.success) {
-  return res.status(400).json({ message: rest.error.errors[0].message })
+  return res.status(400).json({ message: rest.error.issues[0].message })
 }
  
    
@@ -53,7 +59,7 @@ const register=async(req,res)=>{
     
 }
 catch(err) {
-  res.status(500).json({ message: "something went wrong" })
+  next(err);
 }}
 const profile=async(req,res)=>{
     res.status(200).send(req.user);
